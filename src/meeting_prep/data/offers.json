@@ -1,0 +1,11 @@
+{
+  "_note": "Offer catalog the brief may recommend from. The rep may extend up to max_discount_pct without manager approval.",
+  "rep_discount_authority_pct": 5,
+  "offers": [
+    {"id": "OFF-FLEX-SUITE", "name": "Flex suite nights", "text": "Convert unused suite nights into concert or family-show nights at no extra cost", "eligible_segments": ["suite"], "max_discount_pct": 0},
+    {"id": "OFF-HOSP-GROUP", "name": "Group hospitality night", "text": "Hosted hospitality space for a client event at an upcoming game or concert", "eligible_segments": ["suite", "season", "plan"], "requires": "hospitality_event", "max_discount_pct": 0},
+    {"id": "OFF-ADD-SEATS", "name": "Add seats", "text": "Add seats next to the current location at the current per-seat rate", "eligible_segments": ["season", "plan"], "requires": "usage_at_least_80", "max_discount_pct": 0},
+    {"id": "OFF-EARLY-RENEW", "name": "Early renewal", "text": "Renew before the close date to lock current pricing with a loyalty credit of up to 5%", "eligible_segments": ["suite", "season", "plan"], "requires": "renewal_open", "max_discount_pct": 5},
+    {"id": "OFF-SERVICE-CREDIT", "name": "Service recovery credit", "text": "Food and beverage credit of up to $2,500 after a service failure", "eligible_segments": ["suite", "season", "plan"], "requires": "high_severity_case", "max_discount_pct": 0}
+  ]
+}

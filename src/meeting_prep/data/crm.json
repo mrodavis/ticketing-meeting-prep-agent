@@ -1,0 +1,73 @@
+{
+  "_note": "Synthetic data for a fictional venue (Meridian Arena). Shaped like Salesforce Account, Opportunity and Case records.",
+  "accounts": {
+    "ACC-1001": {
+      "name": "Halvorsen Logistics",
+      "segment": "suite",
+      "owner_rep": "J. Ortiz",
+      "plan": {"product": "Suite 14, full season", "team": "Meridian Foxes", "seats": 18, "contract_value": 296000},
+      "renewal": {"opportunity_id": "OPP-7781", "stage": "Proposal", "amount": 310000, "close_date": "2027-01-15"},
+      "cases": [
+        {"id": "CASE-551", "subject": "Suite catering arriving after tip-off", "severity": "high", "status": "open", "opened": "2026-10-30"},
+        {"id": "CASE-498", "subject": "Parking passes mailed to old address", "severity": "low", "status": "closed", "opened": "2026-09-12"}
+      ],
+      "contacts": [{"name": "Erik Halvorsen", "title": "COO", "email": "erik.h@halvorsen.example", "phone": "555-0141"}]
+    },
+    "ACC-1002": {
+      "name": "Brightwater Dental Group",
+      "segment": "season",
+      "owner_rep": "J. Ortiz",
+      "plan": {"product": "Courtside Club season seats", "team": "Meridian Herons", "seats": 8, "contract_value": 64000},
+      "renewal": {"opportunity_id": "OPP-7802", "stage": "Qualification", "amount": 66000, "close_date": "2027-05-01"},
+      "cases": [],
+      "contacts": [{"name": "Dr. Amara Quist", "title": "Managing Partner", "email": "aquist@brightwater.example", "phone": "555-0177"}]
+    },
+    "ACC-1003": {
+      "name": "Okafor & Lin LLP",
+      "segment": "plan",
+      "owner_rep": "D. Whitfield",
+      "plan": {"product": "12-game plan, lower bowl", "team": "Meridian Foxes", "seats": 4, "contract_value": 9600},
+      "renewal": {"opportunity_id": "OPP-7811", "stage": "Negotiation", "amount": 9600, "close_date": "2026-12-15"},
+      "cases": [
+        {"id": "CASE-560", "subject": "Mobile tickets not showing in app for one seat", "severity": "medium", "status": "open", "opened": "2026-11-09"}
+      ],
+      "contacts": [{"name": "Grace Lin", "title": "Partner", "email": "glin@okaforlin.example", "phone": "555-0102"}]
+    },
+    "ACC-1004": {
+      "name": "Castellan Energy",
+      "segment": "suite",
+      "owner_rep": "D. Whitfield",
+      "plan": {"product": "Suite 3, full season plus concourse signage", "team": "Meridian Foxes", "seats": 16, "contract_value": 412000},
+      "renewal": {"opportunity_id": "OPP-7790", "stage": "Proposal", "amount": 425000, "close_date": "2027-02-28"},
+      "cases": [],
+      "contacts": [{"name": "Priya Raman", "title": "VP Marketing", "email": "praman@castellan.example", "phone": "555-0190"}]
+    },
+    "ACC-1005": {
+      "name": "Pinecrest Health",
+      "segment": "season",
+      "owner_rep": "J. Ortiz",
+      "plan": {"product": "Loge box season seats", "team": "Meridian Herons", "seats": 6, "contract_value": 39000},
+      "renewal": {"opportunity_id": "OPP-7820", "stage": "Proposal", "amount": 40500, "close_date": "2027-01-05"},
+      "cases": [],
+      "contacts": [{"name": "Tomás Reyes", "title": "Director of Community Relations", "email": "treyes@pinecrest.example", "phone": "555-0133"}]
+    },
+    "ACC-1006": {
+      "name": "Rowan Media",
+      "segment": "season",
+      "owner_rep": "D. Whitfield",
+      "plan": {"product": "Center court season seats", "team": "Meridian Foxes", "seats": 10, "contract_value": 118000},
+      "renewal": {"opportunity_id": "OPP-7795", "stage": "Qualification", "amount": 118000, "close_date": "2027-03-31"},
+      "cases": [],
+      "contacts": [{"name": "Jonah Petrakis", "title": "Head of Partnerships", "email": "jonah@rowanmedia.example", "phone": "555-0158"}]
+    },
+    "ACC-1007": {
+      "name": "Delgado Construction",
+      "segment": "season",
+      "owner_rep": "J. Ortiz",
+      "plan": {"product": "Baseline club season seats", "team": "Meridian Foxes", "seats": 6, "contract_value": 54000},
+      "renewal": {"opportunity_id": "OPP-7830", "stage": "Qualification", "amount": 54000, "close_date": "2027-04-15"},
+      "cases": [],
+      "contacts": [{"name": "Luis Delgado", "title": "Owner", "email": "luis@delgadobuild.example", "phone": "555-0119"}]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_note": "Season-to-date ticket activity per account (synthetic). issued = seats x home games played.",
+  "accounts": {
+    "ACC-1001": {"home_games": 12, "issued": 216, "scanned": 97, "transferred": 40, "resold": 6, "last_4_scanned": [5, 4, 3, 2]},
+    "ACC-1002": {"home_games": 9, "issued": 72, "scanned": 66, "transferred": 5, "resold": 0, "last_4_scanned": [8, 7, 8, 8]},
+    "ACC-1003": {"home_games": 5, "issued": 20, "scanned": 13, "transferred": 3, "resold": 1, "last_4_scanned": [3, 3, 2, 3]},
+    "ACC-1004": {"home_games": 12, "issued": 192, "scanned": 151, "transferred": 22, "resold": 0, "last_4_scanned": [13, 12, 14, 12]},
+    "ACC-1005": {"home_games": 9, "issued": 54, "scanned": 41, "transferred": 6, "resold": 2, "last_4_scanned": [5, 4, 5, 4]},
+    "ACC-1006": {"home_games": 12, "issued": 120, "scanned": 104, "transferred": 9, "resold": 58, "last_4_scanned": [9, 8, 9, 9]},
+    "ACC-1007": {"home_games": 12, "issued": 72, "scanned": 69, "transferred": 4, "resold": 0, "last_4_scanned": [6, 6, 6, 6]}
+  },
+  "outages": {
+    "_note": "Simulated transient failures: number of consecutive failed calls before the source answers.",
+    "ACC-1003": 1,
+    "ACC-1005": 99
+  }
+}

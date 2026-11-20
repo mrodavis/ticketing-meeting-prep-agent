@@ -1,0 +1,11 @@
+{
+  "_note": "Upcoming Meridian Arena events (synthetic teams and acts).",
+  "events": [
+    {"id": "EVT-2041", "name": "Meridian Foxes vs. Lakeshore Pilots", "date": "2026-11-28", "category": "foxes", "hospitality_available": true, "suite_nights_available": 2},
+    {"id": "EVT-2044", "name": "Meridian Herons vs. Granite Bay Owls", "date": "2026-12-03", "category": "herons", "hospitality_available": true, "suite_nights_available": 0},
+    {"id": "EVT-2047", "name": "Winter Lights Orchestra (concert)", "date": "2026-12-11", "category": "concert", "hospitality_available": true, "suite_nights_available": 4},
+    {"id": "EVT-2050", "name": "Meridian Foxes vs. Coastal Ravens", "date": "2026-12-16", "category": "foxes", "hospitality_available": false, "suite_nights_available": 0},
+    {"id": "EVT-2053", "name": "Holiday Family Skate Night", "date": "2026-12-20", "category": "family", "hospitality_available": false, "suite_nights_available": 1},
+    {"id": "EVT-2058", "name": "Meridian Herons vs. Northfield Comets", "date": "2027-01-09", "category": "herons", "hospitality_available": true, "suite_nights_available": 1}
+  ]
+}

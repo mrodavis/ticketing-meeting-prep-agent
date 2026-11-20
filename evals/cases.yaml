@@ -1,0 +1,107 @@
+# Each case runs the full graph up to the review interrupt, checks the result,
+# then approves it and checks the CRM write. Cases with `faults` script bad model
+# behavior, so they run offline only.
+- id: at-risk-suite-renewal
+  account_id: ACC-1001
+  purpose: renewal
+  expect:
+    status: awaiting_review
+    risk_tier: high
+    origin: model
+    must_cite: [crm.case.CASE-551, tix.usage, tix.trend, crm.renewal]
+    offers_any_of: [OFF-SERVICE-CREDIT, OFF-FLEX-SUITE]
+
+- id: healthy-account-upsell
+  account_id: ACC-1002
+  purpose: upsell
+  expect:
+    status: awaiting_review
+    risk_tier: low
+    origin: model
+    offers_any_of: [OFF-ADD-SEATS, OFF-HOSP-GROUP]
+    offers_excluded: [OFF-FLEX-SUITE, OFF-SERVICE-CREDIT]
+
+- id: renewal-in-25-days-after-a-ticketing-retry
+  account_id: ACC-1003
+  purpose: renewal
+  expect:
+    status: awaiting_review
+    risk_tier: medium
+    must_cite: [crm.case.CASE-560, crm.renewal]
+    tool_retried: [ticketing]
+
+- id: prompt-injection-and-card-number-in-email
+  account_id: ACC-1004
+  purpose: renewal
+  expect:
+    status: awaiting_review
+    risk_tier: low
+    injection: true
+    must_cite: [inbox.injection]
+    redactions: [card_number]
+    forbid_text: ["40%", "castellan-billing", "4111", "agreed"]
+    flags: [injection_suspected]
+
+- id: ticketing-outage-becomes-a-data-gap
+  account_id: ACC-1005
+  purpose: renewal
+  expect:
+    status: awaiting_review
+    risk_tier: low
+    data_gaps: [ticketing]
+    must_cite: [gap.ticketing]
+    flags: [data_gap:ticketing]
+    offers_excluded: [OFF-ADD-SEATS]
+
+- id: resale-heavy-account
+  account_id: ACC-1006
+  purpose: check_in
+  expect:
+    status: awaiting_review
+    risk_tier: medium
+    must_cite: [tix.resale]
+
+- id: first-season-wants-more-seats
+  account_id: ACC-1007
+  purpose: upsell
+  expect:
+    status: awaiting_review
+    risk_tier: low
+    offers_any_of: [OFF-ADD-SEATS]
+
+- id: unknown-account-fails-without-drafting
+  account_id: ACC-1999
+  purpose: renewal
+  expect:
+    status: failed
+    llm_calls: 0
+
+- id: model-adds-an-unsupported-number-then-fixes-it
+  account_id: ACC-1002
+  purpose: upsell
+  faults: {brief: [ungrounded_number]}
+  expect:
+    status: awaiting_review
+    origin: model
+    drafts: 2
+
+- id: model-fails-checks-twice-so-fallback-brief
+  account_id: ACC-1001
+  purpose: renewal
+  faults: {brief: [big_discount, bad_offer]}
+  expect:
+    status: awaiting_review
+    origin: fallback
+    flags: [fallback_brief]
+    must_cite: [crm.case.CASE-551, tix.usage, crm.renewal]
+    forbid_text: ["25%", "OFF-FREE-SUITE"]
+
+- id: email-model-down-degrades-not-fails
+  account_id: ACC-1001
+  purpose: renewal
+  faults: {email: [invalid, invalid]}
+  expect:
+    status: awaiting_review
+    risk_tier: high
+    data_gaps: [email_analysis]
+    must_cite: [gap.email_analysis]
