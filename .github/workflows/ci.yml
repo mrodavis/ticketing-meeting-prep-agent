@@ -3,17 +3,33 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: meeting_prep
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: meeting_prep
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U meeting_prep" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
-      - run: pip install -e ".[dev]" ruff
+      - run: pip install -e ".[dev,postgres]" ruff
       - name: Lint
         run: ruff check src tests && ruff format --check src tests
-      - name: Unit, graph, Bedrock-stub and API tests
-        run: pytest -q
+      - name: Unit, graph, Bedrock-stub, API and Postgres checkpointer tests
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: meeting_prep
+          PGPASSWORD: ci-only-password
+          PGDATABASE: meeting_prep
+        run: pytest -q -rs
       - name: Offline eval gate (fails CI on any behavior regression)
         run: python -m meeting_prep.evals --offline
       - uses: actions/upload-artifact@v4
@@ -33,3 +49,23 @@ jobs:
           for i in $(seq 1 30); do curl -fsS localhost:8000/healthz && break; sleep 1; done
           curl -fsS -X POST localhost:8000/briefs -H "Authorization: Bearer ci-token" -H "Content-Type: application/json" \
             -d '{"account_id":"ACC-1002","meeting_date":"2026-11-24","purpose":"upsell","rep":"ci"}' | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['status']=='awaiting_review', d; print(d['status'], d['risk']['tier'])"
+
+  infra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infra/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Assertion tests on the synthesized template
+        run: npm test
+      - name: Synthesize
+        run: npx cdk synth --quiet

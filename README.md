@@ -42,7 +42,7 @@ Generated from the compiled graph with `build_graph().get_graph().draw_mermaid()
 | **Discount authority is enforced in code.** Any "X% off" or "credit of X%" above the rep's 5% limit fails, and so do "guarantee" and "has agreed to". | A model must not commit the business to terms. |
 | **Untrusted email is quarantined.** Cards and SSNs are redacted before any model call. A regex check is OR'd with the model's own injection flag. Client asks are dropped when injection is suspected. | The test account's email tells "the AI" to promise a 40% discount and send the contract to an outside address. None of that can reach the brief. |
 | **Dependencies come in through LangGraph's runtime context** (`StateGraph(State, context_schema=Deps)`). | The same compiled graph runs on fixtures in CI and on real clients in production. |
-| **State is plain JSON, with a checkpointer** (SQLite here). | The rep can decide hours later, after a restart. A test proves this by resuming on a fresh graph instance. |
+| **State is plain JSON, with a checkpointer** (SQLite locally, Postgres on AWS). | The rep can decide hours later, after a restart. A test proves this by resuming on a fresh graph instance. |
 | **Retries only where they're safe.** Reads use bounded backoff and record each attempt. `RetryPolicy` is only on the idempotent CRM write. | No duplicate CRM notes, and every attempt shows up in metrics. |
 | **Tool-call and model-call metrics on every run** (`metrics.py`): first-try and eventual tool success, model call success, first-draft pass rate, fallback rate, tokens. | The numbers you watch in production, and what the eval report aggregates. |
 
@@ -61,10 +61,10 @@ Generated from the compiled graph with `build_graph().get_graph().draw_mermaid()
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"
 
-pytest -q                                   # 46 tests, no AWS needed
+pytest -q                                   # 50 tests, no AWS needed (52 with a Postgres, see below)
 python -m meeting_prep.evals --offline      # eval gate used in CI
 
-# CLI: draft, then decide later (checkpointed to .data/checkpoints.sqlite)
+# CLI: draft, then decide later (checkpointed to .data/checkpoints.sqlite, or Postgres with CHECKPOINT_BACKEND=postgres)
 meeting-prep prep ACC-1001 --date 2026-11-24 --purpose renewal --rep "J. Ortiz"
 meeting-prep decide <thread_id> approve --reviewer "J. Ortiz"
 
@@ -119,9 +119,36 @@ Each source is a small Protocol in `sources.py`:
 
 Those production clients are not in this repo.
 
+## Deploy to AWS (CDK)
+
+`infra/` is an AWS CDK app in TypeScript that runs the API on AWS.
+
+| Piece | What the stack does |
+|---|---|
+| Compute | ECS on Fargate: 2 tasks in private subnets, image built from the Dockerfile, CPU auto scaling from 2 to 4, deployment circuit breaker with rollback. |
+| Entry | Application Load Balancer, **internal by default**, because this is a staff tool reached over VPN. Public mode requires `allowedCidr`. With `certificateArn` it serves HTTPS and redirects HTTP. |
+| Paused runs | RDS Postgres 16 (encrypted, private, SSL required, 7-day backups, snapshot on delete). LangGraph's `PostgresSaver` keeps paused runs, so a rep can approve on a different task than the one that drafted. |
+| Secrets | The staff token and database credentials live in Secrets Manager and arrive as ECS secrets. The app reads the standard libpq `PG*` variables, so no connection string is assembled anywhere. |
+| Bedrock | The task role can invoke one inference profile, the model only through that profile, and apply one guardrail. The stack creates that guardrail: a prompt-attack filter, a denied topic for contract commitments, and masking for card and Social Security numbers. Bedrock and Secrets Manager traffic goes through VPC endpoints. |
+| Observability | The app prints one CloudWatch Embedded Metric Format line per run (runs, fallbacks, first-draft passes, tool retries, model call failures, data gaps, tokens, latency) and one per rep decision. 8 alarms notify an SNS topic (5xx, p95 latency, unhealthy tasks, fallbacks, model failures, database CPU and storage), and a dashboard shows the same numbers. |
+
+```bash
+cd infra && npm ci
+npm test                    # 11 assertion tests on the synthesized template
+npx cdk synth --quiet
+
+npx cdk deploy -c alarmEmail=you@example.com                       # internal load balancer
+npx cdk deploy -c publicLoadBalancer=true -c allowedCidr=203.0.113.10/32 \
+               -c certificateArn=arn:aws:acm:us-east-1:...         # public, HTTPS, one address range
+```
+
+Each task runs LangGraph's Postgres migrations at startup, under an advisory lock. Without the lock, tasks that start together fail with `DuplicateTable` or `UniqueViolation`. The lock is polled with `pg_try_advisory_lock`: my first version waited in `pg_advisory_lock` and deadlocked, because the migrations use `CREATE INDEX CONCURRENTLY`, which waits for the snapshots of the sessions blocked on the lock. `tests/test_checkpoints_and_emf.py` caught it by starting four tasks at once against an empty schema. It also drafts on one app instance and approves on another with its own connection pool. Those two tests run when `PGHOST` is set; CI starts a Postgres 16 service container for them.
+
+I haven't deployed this stack to an AWS account. CI type-checks it, synthesizes it and runs the assertion tests. The deployed service would still read the synthetic fixtures until real source clients exist. The stack runs a NAT gateway, a load balancer, two Fargate tasks and an RDS instance, all billed by the hour, so run `npx cdk destroy` when you're done (RDS keeps a final snapshot).
+
 ## Not here
 
-No real integrations, and no deployment: the Dockerfile and IAM policy are a starting point, and CI builds and smoke-tests the image. Auth is a single staff bearer token. A real deployment would use SSO, plus per-rep access to their own accounts.
+No real integrations. Auth is a single staff bearer token; a real deployment would use SSO, plus per-rep access to their own accounts.
 
 ## Provenance
 

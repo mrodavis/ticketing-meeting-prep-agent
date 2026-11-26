@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import hmac
 import os
-import sqlite3
+import time
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException
-from langgraph.checkpoint.sqlite import SqliteSaver
 
+from . import checkpoints, emf
 from .graph import Deps, build_graph
 from .metrics import run_metrics
 from .models import MeetingRequest, ReviewDecision
@@ -44,8 +44,7 @@ def create_app(graph: Any = None, deps: Deps | None = None, token: str | None = 
     if not token:
         raise RuntimeError("Set STAFF_TOKEN")
     if graph is None:
-        conn = sqlite3.connect(os.environ.get("CHECKPOINT_DB", ".data/checkpoints.sqlite"), check_same_thread=False)
-        graph = build_graph(SqliteSaver(conn))
+        graph = build_graph(checkpoints.from_env())
     deps = deps or fixture_deps()
     app = FastAPI(title="Meeting prep agent")
 
@@ -66,7 +65,11 @@ def create_app(graph: Any = None, deps: Deps | None = None, token: str | None = 
 
     @app.post("/briefs", status_code=201, dependencies=[Depends(staff)])
     def create_brief(req: MeetingRequest) -> dict[str, Any]:
+        started = time.perf_counter()
         result = start(graph, deps, req)
+        state = result["state"]
+        gaps = len((state.get("assessment") or {}).get("data_gaps", []))
+        emf.emit(emf.run_values(run_metrics(state.get("trace", [])), gaps, (time.perf_counter() - started) * 1000), units=emf.RUN_UNITS)
         if result["status"] == "failed":
             errors = result["state"].get("source_errors", [])
             if any(e["source"] == "crm" and e["error"] == "record not found" for e in errors):
@@ -87,8 +90,10 @@ def create_app(graph: Any = None, deps: Deps | None = None, token: str | None = 
     def post_decision(thread_id: str, decision: ReviewDecision) -> dict[str, Any]:
         load(thread_id)
         try:
-            return public_view(decide(graph, deps, thread_id, decision))
+            result = decide(graph, deps, thread_id, decision)
         except ValueError as e:
             raise HTTPException(status_code=409, detail=str(e)) from None
+        emf.emit({f"Decision{decision.decision.capitalize()}": 1})
+        return public_view(result)
 
     return app

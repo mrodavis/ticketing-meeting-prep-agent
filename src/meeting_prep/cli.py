@@ -1,5 +1,6 @@
 """Command line: prep a meeting, then approve, edit or reject it in a later call.
-Runs are checkpointed to SQLite, so the decision can come hours after the draft.
+Runs are checkpointed (SQLite by default, Postgres with CHECKPOINT_BACKEND=postgres),
+so the decision can come hours after the draft.
 
     meeting-prep prep ACC-1001 --date 2026-11-24 --purpose renewal --rep "J. Ortiz"
     meeting-prep decide <thread_id> approve --reviewer "J. Ortiz"
@@ -10,14 +11,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import sqlite3
 import sys
 from datetime import date
-from pathlib import Path
 
-from langgraph.checkpoint.sqlite import SqliteSaver
-
+from . import checkpoints
 from .graph import build_graph
 from .models import MeetingRequest, ReviewDecision
 from .render import render_markdown
@@ -25,10 +22,7 @@ from .service import decide, fixture_deps, snapshot, start
 
 
 def _graph():
-    path = Path(os.environ.get("CHECKPOINT_DB", ".data/checkpoints.sqlite"))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path, check_same_thread=False)
-    return build_graph(SqliteSaver(conn))
+    return build_graph(checkpoints.from_env())
 
 
 def _print(result: dict) -> None:
